@@ -39,7 +39,7 @@ function App() {
               <PriceCardDisplay
                 key={store.id}
                 store={store}
-                highlightItems={["toaster", "sofa", "pet_slot_1"]}
+                highlightItems={["toaster", "sofa", "cat"]}
               />
             ))}
           </div>

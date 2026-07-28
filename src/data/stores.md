@@ -35,6 +35,17 @@ Furniture_Store_Green:
         Lamp: 90
         Sofa: 300
     }
+    Store_Order: {
+        1: "Entrance"
+        2: "Kitchen_Set"
+        3: "Sofa"
+        4: "Lamp"
+        5: "Armchair"
+        6: "Clock"
+        7: "Bed"
+        8: "Dresser"
+        9: "Go back to any space in this store or draw an events card"
+    }
 Furniture_Store_Blue:
     Card_1: {
         Armchair: 350
@@ -71,6 +82,17 @@ Furniture_Store_Blue:
         Kitchen_Set: 450
         Lamp: 50
         Sofa: 550
+    }
+    Store_Order: {
+        1: "Entrance"
+        2: "Lamp"
+        3: "Sofa"
+        4: "Dresser"
+        5: "Bed"
+        6: "Clock"
+        7: "Armchair"
+        8: "Kitchen_Set"
+        9: "Go back to any space in this store or draw an events card"
     }
 Department_Store_Olive:
     Card_1: {
@@ -121,6 +143,22 @@ Department_Store_Olive:
         Toaster: 40
         Washing_Machine: 400
     }
+    Store_Order: {
+        1: "Entrance"
+        2: "Stove"
+        3: "Radio"
+        4: "Television"
+        5: "SALE"
+        6: "Dishwasher"
+        7: "Clothes_Dryer"
+        8: "Refrigerator"
+        9: "Washing_Machine"
+        10: "SALE"
+        11: "Iron"
+        12: "Blender"
+        13: "Toaster"
+        14: "Go back to any space in this store or draw an events card"
+    }
 Department_Store_Purple:
     Card_1: {
         Blender: 55
@@ -169,6 +207,22 @@ Department_Store_Purple:
         Television: 300
         Toaster: 25
         Washing_Machine: 475
+    }
+    Store_Order: {
+        1: "Entrance"
+        2: "Radio"
+        3: "Clothes_Dryer"
+        4: "Toaster"
+        5: "SALE"
+        6: "Iron"
+        7: "Blender"
+        8: "Refrigerator"
+        9: "Television"
+        10: "SALE"
+        11: "Stove"
+        12: "Dishwasher"
+        13: "Washing_Machine"
+        14: "Go back to any space in this store or draw an events card"
     }
 Pet_Store_Yellow:
     Card_1: {

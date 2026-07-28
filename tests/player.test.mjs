@@ -105,14 +105,20 @@ console.log("hasCompletedList");
 const hcl = createPlayer(0, "Tester", ["Milk", "Bread"]);
 assert("not complete with items remaining", !hasCompletedList(hcl));
 hcl.shoppingList = [];
-assert("complete when list is empty",       hasCompletedList(hcl));
+assert("not complete with empty list but no pets", !hasCompletedList(hcl));
+hcl.purchased.push({ item: "Dog Toy", store: "Pet Palace", price: 10 });
+assert("not complete with only one pet species", !hasCompletedList(hcl));
+hcl.purchased.push({ item: "Cat Food", store: "Pet Palace", price: 6 });
+assert("complete with empty list + 2 distinct pets", hasCompletedList(hcl));
 
 // ── calculateScore ────────────────────────────────────────────────────────────
 console.log("calculateScore");
 const scorer = createPlayer(0, "Scorer", []);
 scorer.budget = 200;
 scorer.spent = 80;
-// List is empty so bonus applies
+scorer.purchased.push({ item: "Dog Toy", store: "Pet Palace", price: 10 });
+scorer.purchased.push({ item: "Cat Food", store: "Pet Palace", price: 6 });
+// List is empty and two distinct pets are purchased, so bonus applies.
 const score = calculateScore(scorer, 50);
 assert("score = remaining budget + bonus",  score === 170);
 

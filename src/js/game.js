@@ -303,7 +303,7 @@ class Game extends EventEmitter {
     // A player wins immediately upon completing their shopping list
     const winner = this.players.find(hasCompletedList);
     if (winner) {
-      this._endGame(winner, "completed their shopping list");
+      this._endGame(winner, "completed their shopping list and bought 2 distinct pets");
       return true;
     }
 

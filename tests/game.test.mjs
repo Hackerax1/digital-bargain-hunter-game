@@ -136,6 +136,8 @@ wg.setup(["Alice", "Bob"]);
 // Clear both lists so the next endTurn check triggers a win
 wg.players[0].shoppingList = [];
 wg.players[1].shoppingList = [];
+wg.players[1].purchased.push({ item: "Dog Toy", store: "Pet Palace", price: 10 });
+wg.players[1].purchased.push({ item: "Cat Food", store: "Pet Palace", price: 6 });
 
 // Simulate end of turn — _checkWin is called inside endTurn
 // We need to advance player and let checkWin run

@@ -6,6 +6,35 @@
 const PLAYER_COLORS = ["#e63946", "#2a9d8f", "#e9c46a", "#457b9d"];
 const PLAYER_TOKENS = ["🛒", "🛍️", "💳", "🎒"];
 
+// Canonical pet species map for both legacy and current data sets.
+const PET_ITEM_TO_SPECIES = {
+  cat: "cat",
+  dog: "dog",
+  fish: "fish",
+  lizard: "lizard",
+  parrot: "parrot",
+  rabbit: "rabbit",
+  "dog toy": "dog",
+  "cat food": "cat",
+  "fish bowl": "fish",
+};
+
+function normalizeItemName(item) {
+  return String(item).trim().toLowerCase().replace(/_/g, " ");
+}
+
+function petSpeciesForItem(item) {
+  return PET_ITEM_TO_SPECIES[normalizeItemName(item)] ?? null;
+}
+
+function purchasedPetSpecies(player) {
+  return new Set(
+    player.purchased
+      .map((record) => petSpeciesForItem(record.item))
+      .filter(Boolean)
+  );
+}
+
 /**
  * Creates a new player object.
  *
@@ -56,13 +85,22 @@ function movePlayer(player, steps, totalSpaces) {
  * @param {string} item   - item name
  * @param {string} store  - store name
  * @param {number} price  - price paid
- * @returns {boolean} whether the purchase succeeded (enough budget & item on list)
+ * @returns {boolean} whether the purchase succeeded.
+ *                    Non-list purchases are allowed only for pet items.
  */
 function buyItem(player, item, store, price) {
-  if (!player.shoppingList.includes(item)) return false;
+  const onShoppingList = player.shoppingList.includes(item);
+  const isPetPurchase = petSpeciesForItem(item) !== null;
+
+  if (!onShoppingList && !isPetPurchase) return false;
   if (player.budget - player.spent < price) return false;
+
   player.spent += price;
-  player.shoppingList = player.shoppingList.filter((i) => i !== item);
+
+  if (onShoppingList) {
+    player.shoppingList = player.shoppingList.filter((i) => i !== item);
+  }
+
   player.purchased.push({ item, store, price });
   return true;
 }
@@ -77,12 +115,13 @@ function remainingBudget(player) {
 }
 
 /**
- * Returns true when the player has bought every item on their shopping list.
+ * Returns true when the player has bought every non-pet list item and at least
+ * two distinct pet species.
  * @param {object} player
  * @returns {boolean}
  */
 function hasCompletedList(player) {
-  return player.shoppingList.length === 0;
+  return player.shoppingList.length === 0 && purchasedPetSpecies(player).size >= 2;
 }
 
 /**
