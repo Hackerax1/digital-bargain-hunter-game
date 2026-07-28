@@ -95,32 +95,32 @@ console.log("purchaseItem");
 // Non-store space
 g2.players[0].position = 0; // parking
 g2.currentPlayerIndex = 0;
-const noStore = g2.purchaseItem("Milk");
+const noStore = g2.purchaseItem("Blender");
 assert("fails on non-store space",   !noStore.success);
 
-// Store space — Grocery Mart is space 1 (storeId: 'grocery', has Milk)
-g2.players[0].position = 1;
+// Store space — Purple Department Store Entrance is space 5 (1-based).
+g2.players[0].position = 4;
 g2.saleActive = false;
-const okBuy = g2.purchaseItem("Milk");
-assert("buys Milk at Grocery Mart",  okBuy.success);
+const okBuy = g2.purchaseItem("Blender");
+assert("buys Blender at Purple Department Store",  okBuy.success);
 assert("emits itemPurchased",        events.some((e) => e.type === "itemPurchased"));
-assert("Milk off shopping list",     !g2.players[0].shoppingList.includes("Milk"));
+assert("Blender off shopping list",  !g2.players[0].shoppingList.includes("Blender"));
 
 // Item not in this store
-const wrongStore = g2.purchaseItem("Necklace"); // Necklace is in Jewellery, not Grocery
+const wrongStore = g2.purchaseItem("Armchair"); // Armchair is in furniture stores, not purple dept.
 assert("fails if item not in store", !wrongStore.success);
 
 // ── Sale discount ─────────────────────────────────────────────────────────────
 console.log("Sale discount");
 const sg = new Game();
 sg.setup(["Alice", "Bob"]);
-sg.players[0].position = 1; // Grocery Mart
+sg.players[0].position = 4; // Purple Department Store Entrance
 sg.saleActive = true;
 
-const basePrice = 3; // Milk costs $3
+const basePrice = 55; // Blender costs $55 on Purple Card 1 data
 const discountedPrice = Math.floor(basePrice * (1 - SALE_DISCOUNT));
 const beforeSpent = sg.players[0].spent;
-const saleResult = sg.purchaseItem("Milk");
+const saleResult = sg.purchaseItem("Blender");
 assert("sale purchase succeeds", saleResult.success);
 assert("sale price is discounted",
   sg.players[0].spent - beforeSpent === discountedPrice
@@ -136,8 +136,8 @@ wg.setup(["Alice", "Bob"]);
 // Clear both lists so the next endTurn check triggers a win
 wg.players[0].shoppingList = [];
 wg.players[1].shoppingList = [];
-wg.players[1].purchased.push({ item: "Dog Toy", store: "Pet Palace", price: 10 });
-wg.players[1].purchased.push({ item: "Cat Food", store: "Pet Palace", price: 6 });
+wg.players[1].purchased.push({ item: "Dog", store: "Pet Store Yellow", price: 200 });
+wg.players[1].purchased.push({ item: "Cat", store: "Pet Store Yellow", price: 150 });
 
 // Simulate end of turn — _checkWin is called inside endTurn
 // We need to advance player and let checkWin run
@@ -150,6 +150,42 @@ assert("winner is identified",    wEvents[0]?.winner !== undefined);
 console.log("Post-gameover no-op");
 const result = wg.takeTurn();
 assert("takeTurn returns null after gameover", result === null);
+
+// ── Special board-space effects ─────────────────────────────────────────────
+console.log("Special board-space effects");
+const eg = new Game();
+const specialEvents = [];
+["taxCharged", "forcedMove", "eventsCardDrawRequested", "bargainFinderDrawRequested", "tagSaleActivated", "paydayCollected"].forEach((ev) =>
+  eg.on(ev, (d) => specialEvents.push({ type: ev, ...d }))
+);
+eg.setup(["Alice", "Bob"]);
+const ep = eg.players[0];
+
+// Spinner-multiplied tax (Restaurant: $10 x spinner)
+eg.lastDiceRoll = { die1: 2, die2: 3, total: 5 };
+const spentBeforeTax = ep.spent;
+eg._applySpaceEffect(ep, BOARD_SPACES[2]);
+assert("tax spaces can multiply by spinner", ep.spent - spentBeforeTax === 50);
+
+// Forced move from Hunger Strikes to Restaurant (then Restaurant resolves)
+eg.lastDiceRoll = { die1: 3, die2: 2, total: 5 };
+const spentBeforeForced = ep.spent;
+eg._applySpaceEffect(ep, BOARD_SPACES[15]);
+assert("forced move updates player position", ep.position === 2);
+assert("forced move destination effect resolves", ep.spent - spentBeforeForced === 50);
+assert("forcedMove event emitted", specialEvents.some((e) => e.type === "forcedMove"));
+
+// Events and bargain-finder draw signals
+eg._applySpaceEffect(ep, BOARD_SPACES[11]);
+eg._applySpaceEffect(ep, BOARD_SPACES[12]);
+assert("events draw request emitted", specialEvents.some((e) => e.type === "eventsCardDrawRequested"));
+assert("bargain finder draw request emitted", specialEvents.some((e) => e.type === "bargainFinderDrawRequested"));
+
+// Tag Sale activation sets spin-based price
+eg.lastDiceRoll = { die1: 1, die2: 3, total: 4 };
+eg._applySpaceEffect(ep, BOARD_SPACES[39]);
+assert("tag sale sets price to spin x $10", eg.tagSalePrice === 40);
+assert("tag sale event emitted", specialEvents.some((e) => e.type === "tagSaleActivated"));
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -79,6 +79,7 @@ class Game extends EventEmitter {
     this.round = 1;
     this.phase = "setup";   // setup | playing | gameover
     this.saleActive = false; // discount flag for current turn
+    this.tagSalePrice = null;
     this.lastDiceRoll = null;
   }
 
@@ -103,6 +104,7 @@ class Game extends EventEmitter {
     this.round = 1;
     this.phase = "playing";
     this.saleActive = false;
+    this.tagSalePrice = null;
     this.lastDiceRoll = null;
 
     this.players[0].isActive = true;
@@ -134,6 +136,7 @@ class Game extends EventEmitter {
     if (this.phase !== "playing") return null;
 
     this.saleActive = false;
+    this.tagSalePrice = null;
     const roll = rollDice();
     this.lastDiceRoll = roll;
 
@@ -229,7 +232,8 @@ class Game extends EventEmitter {
 
     const ok = buyItem(player, itemName, store.name, price);
     if (!ok) {
-      if (!player.shoppingList.includes(itemName)) {
+      const isPetPurchase = space.storeId === "pets";
+      if (!player.shoppingList.includes(itemName) && !isPetPurchase) {
         return { success: false, message: `"${itemName}" is not on your shopping list.` };
       }
       return {
@@ -251,6 +255,48 @@ class Game extends EventEmitter {
     return { success: true, message: `Bought "${itemName}" for $${price} at ${store.name}.` };
   }
 
+  /**
+   * Attempts to buy any listed item at Tag Sale price (spin x $10).
+   * @param {string} itemName
+   * @returns {{ success: boolean, message: string }}
+   */
+  purchaseTagSaleItem(itemName) {
+    const player = this.currentPlayer;
+    if (!this.tagSalePrice) {
+      return { success: false, message: "Tag Sale is not active right now." };
+    }
+
+    const storeEntry = Object.entries(STORES).find(([, store]) => itemName in store.items);
+    if (!storeEntry) {
+      return { success: false, message: `"${itemName}" is not sold in any store.` };
+    }
+
+    const [storeId, store] = storeEntry;
+    const ok = buyItem(player, itemName, `${store.name} (Tag Sale)`, this.tagSalePrice);
+    if (!ok) {
+      const isPetPurchase = storeId === "pets";
+      if (!player.shoppingList.includes(itemName) && !isPetPurchase) {
+        return { success: false, message: `"${itemName}" is not on your shopping list.` };
+      }
+      return {
+        success: false,
+        message: `Not enough budget. You need $${this.tagSalePrice} but only have $${remainingBudget(player)}.`,
+      };
+    }
+
+    this.emit("itemPurchased", {
+      player,
+      item: itemName,
+      store: `${store.name} (Tag Sale)`,
+      price: this.tagSalePrice,
+      saleActive: false,
+      remainingBudget: remainingBudget(player),
+      shoppingListRemaining: player.shoppingList.length,
+    });
+
+    return { success: true, message: `Bought "${itemName}" for $${this.tagSalePrice} at Tag Sale.` };
+  }
+
   // ── Internals ──────────────────────────────────────────────────────────────
 
   /**
@@ -259,21 +305,62 @@ class Game extends EventEmitter {
    * @param {object} space
    */
   _applySpaceEffect(player, space) {
+    const effect = space.effect ?? {};
+
     switch (space.type) {
       case SPACE_TYPES.SALE:
+        if (effect.action === "tag_sale") {
+          const spin = this.lastDiceRoll?.total ?? 1;
+          this.tagSalePrice = spin * 10;
+          this.emit("tagSaleActivated", { player, spin, price: this.tagSalePrice });
+          break;
+        }
         this.saleActive = true;
         this.emit("saleActivated", { player });
         break;
 
       case SPACE_TYPES.TAX: {
-        const amount = space.effect?.amount ?? 10;
+        const multiplier = effect.perSpin ? (this.lastDiceRoll?.total ?? 1) : 1;
+        const amount = (effect.amount ?? 10) * multiplier;
         player.spent += amount;
         this.emit("taxCharged", { player, amount, remainingBudget: remainingBudget(player) });
         break;
       }
 
       case SPACE_TYPES.MOVE: {
-        const extra = space.effect?.spaces ?? 0;
+        if (effect.action === "move_to_space") {
+          const prevPosition = player.position;
+          player.position = effect.targetId;
+          this.emit("forcedMove", {
+            player,
+            from: prevPosition,
+            to: player.position,
+            space: BOARD_SPACES[player.position],
+          });
+          this._applySpaceEffect(player, BOARD_SPACES[player.position]);
+          break;
+        }
+
+        if (effect.action === "choose_store_space") {
+          this.emit("choiceRequired", {
+            player,
+            choice: "store_space",
+            message: "Choose any store space.",
+          });
+          break;
+        }
+
+        if (effect.action === "store_or_events") {
+          this.emit("choiceRequired", {
+            player,
+            choice: "store_or_events",
+            storeId: effect.storeId,
+            message: "Choose a space in the target store or draw an Events card.",
+          });
+          break;
+        }
+
+        const extra = effect.spaces ?? 0;
         if (extra !== 0) {
           const { newPosition } = movePlayer(player, extra, TOTAL_SPACES);
           this.emit("extraMove", {
@@ -287,6 +374,26 @@ class Game extends EventEmitter {
       }
 
       case SPACE_TYPES.PARKING:
+        if (effect.action === "payday") {
+          player.budget += effect.amount ?? 300;
+          this.emit("paydayCollected", {
+            player,
+            amount: effect.amount ?? 300,
+            newBudget: player.budget,
+          });
+          break;
+        }
+
+        if (effect.action === "draw_events") {
+          this.emit("eventsCardDrawRequested", { player });
+          break;
+        }
+
+        if (effect.action === "draw_bargain_finder") {
+          this.emit("bargainFinderDrawRequested", { player });
+          break;
+        }
+
         this.emit("parking", { player });
         break;
 

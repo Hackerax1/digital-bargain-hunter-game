@@ -35,29 +35,28 @@ function clearLog() {
 
 /**
  * Builds the visual board grid from BOARD_SPACES.
- * The 29 spaces are arranged around the perimeter of a 9 × 7 grid.
- *
- * Grid layout (column index, row index):
- *  Bottom row  spaces 0–8  : row 6, cols 0–8
- *  Right col   spaces 9–14 : col 8, rows 5–0 (upward)
- *  Top row     spaces 15–22: row 0, cols 7–0 (left)
- *  Left col    spaces 23–28: col 0, rows 1–5
+ * The 40 spaces are arranged around the perimeter of a 12 × 10 grid.
  */
 function buildBoard() {
   const boardEl = $("game-board");
   boardEl.innerHTML = "";
 
-  // Grid positions for each space id
-  const positions = [
-    // bottom row  (row 6, cols 0-8)
-    [0, 6], [1, 6], [2, 6], [3, 6], [4, 6], [5, 6], [6, 6], [7, 6], [8, 6],
-    // right col  (col 8, rows 5-0)
-    [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0],
-    // top row    (row 0, cols 7-0)
-    [7, 0], [6, 0], [5, 0], [4, 0], [3, 0], [2, 0], [1, 0], [0, 0],
-    // left col   (col 0, rows 1-5)
-    [0, 1], [0, 2], [0, 3], [0, 4], [0, 5],
-  ];
+  const cols = 12;
+  const rows = 10;
+  boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  boardEl.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  boardEl.style.aspectRatio = `${cols} / ${rows}`;
+
+  const positions = [];
+
+  // Bottom row: left -> right
+  for (let col = 0; col < cols; col += 1) positions.push([col, rows - 1]);
+  // Right column: bottom-1 -> top
+  for (let row = rows - 2; row >= 0; row -= 1) positions.push([cols - 1, row]);
+  // Top row: right-1 -> left
+  for (let col = cols - 2; col >= 0; col -= 1) positions.push([col, 0]);
+  // Left column: top+1 -> bottom-1
+  for (let row = 1; row <= rows - 2; row += 1) positions.push([0, row]);
 
   BOARD_SPACES.forEach((space, idx) => {
     const [col, row] = positions[idx];
@@ -74,8 +73,8 @@ function buildBoard() {
   // Centre area
   const centre = document.createElement("div");
   centre.className = "board-centre";
-  centre.style.gridColumn = "2 / 9";
-  centre.style.gridRow = "2 / 7";
+  centre.style.gridColumn = "2 / 12";
+  centre.style.gridRow = "2 / 10";
   centre.innerHTML = `
     <h2>🛒 Bargain Hunter</h2>
     <p>Online Mall Adventure</p>
@@ -153,6 +152,49 @@ function renderStorePanel(space, saleActive, player) {
   const panel = $("store-panel");
   panel.innerHTML = "";
 
+  if (game?.tagSalePrice) {
+    const heading = document.createElement("h3");
+    heading.textContent = `🏷️ Tag Sale — $${game.tagSalePrice} per item`;
+    panel.appendChild(heading);
+
+    const affordable = player.budget - player.spent >= game.tagSalePrice;
+    const items = [...new Set(player.shoppingList)].filter((item) =>
+      Object.values(STORES).some((store) => item in store.items)
+    );
+
+    if (!items.length) {
+      panel.innerHTML += `<p class="no-store">No shopping-list items available for Tag Sale.</p>`;
+      return;
+    }
+
+    items.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "store-item on-list";
+
+      const btn = document.createElement("button");
+      btn.className = "buy-btn";
+      btn.textContent = "Buy";
+      btn.disabled = !affordable;
+      btn.addEventListener("click", () => {
+        const result = game.purchaseTagSaleItem(item);
+        log(result.message, result.success ? "log-success" : "log-error");
+        if (result.success) {
+          renderStorePanel(space, game.saleActive, game.currentPlayer);
+          renderPlayers(game.players, game.currentPlayerIndex);
+        }
+      });
+
+      row.innerHTML = `
+        <span class="item-name">⭐ ${item}</span>
+        <span class="item-price">$${game.tagSalePrice}</span>
+      `;
+      row.appendChild(btn);
+      panel.appendChild(row);
+    });
+
+    return;
+  }
+
   if (space.type !== SPACE_TYPES.STORE || !space.storeId) {
     panel.innerHTML = `<p class="no-store">No store here. End your turn.</p>`;
     return;
@@ -174,7 +216,10 @@ function renderStorePanel(space, saleActive, player) {
   Object.entries(store.items).forEach(([item, basePrice]) => {
     const price = saleActive ? Math.floor(basePrice * 0.75) : basePrice;
     const onList = player.shoppingList.includes(item);
+    const petItem = space.storeId === "pets";
     const alreadyBought = player.purchased.some((r) => r.item === item);
+    const affordable = player.budget - player.spent >= price;
+    const buyAllowed = (onList || petItem) && !alreadyBought && affordable;
 
     const row = document.createElement("div");
     row.className = "store-item" + (onList ? " on-list" : "") + (alreadyBought ? " bought" : "");
@@ -182,7 +227,7 @@ function renderStorePanel(space, saleActive, player) {
     const btn = document.createElement("button");
     btn.className = "buy-btn";
     btn.textContent = "Buy";
-    btn.disabled = !onList || alreadyBought || player.budget - player.spent < price;
+    btn.disabled = !buyAllowed;
     btn.addEventListener("click", () => {
       const result = game.purchaseItem(item);
       log(result.message, result.success ? "log-success" : "log-error");
@@ -238,6 +283,34 @@ function wireGameEvents(g) {
 
   g.on("saleActivated", ({ player }) => {
     log(`📢 SALE! ${player.name} gets 25% off at any store this turn!`, "log-sale");
+  });
+
+  g.on("tagSaleActivated", ({ player, spin, price }) => {
+    log(`🏷️ TAG SALE! ${player.name} can buy any listed item for $${price} (spin ${spin} x $10).`, "log-sale");
+    renderStorePanel(g.currentSpace, g.saleActive, player);
+  });
+
+  g.on("paydayCollected", ({ player, amount }) => {
+    log(`💵 ${player.name} collected $${amount} at Payday.`, "log-success");
+    renderPlayers(g.players, g.currentPlayerIndex);
+  });
+
+  g.on("eventsCardDrawRequested", ({ player }) => {
+    log(`🃏 ${player.name} draws an Events card.`, "log-round");
+  });
+
+  g.on("bargainFinderDrawRequested", ({ player }) => {
+    log(`🛒 ${player.name} draws a Bargain Finder card.`, "log-round");
+  });
+
+  g.on("choiceRequired", ({ player, message }) => {
+    log(`❓ ${player.name}: ${message}`, "log-round");
+  });
+
+  g.on("forcedMove", ({ player, space }) => {
+    log(`↪ ${player.name} was moved to "${space.label}".`, "log-round");
+    renderTokens(g.players);
+    highlightCurrentSpace(player.position);
   });
 
   g.on("taxCharged", ({ player, amount }) => {

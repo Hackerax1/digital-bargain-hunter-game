@@ -34,16 +34,16 @@ assert("has MOVE",    SPACE_TYPES.MOVE === "move");
 
 // ── BOARD_SPACES ──────────────────────────────────────────────────────────────
 console.log("BOARD_SPACES");
-assert("has 29 spaces",         BOARD_SPACES.length === 29);
-assert("TOTAL_SPACES equals 29", TOTAL_SPACES === 29);
+assert("has 40 spaces",          BOARD_SPACES.length === 40);
+assert("TOTAL_SPACES equals 40", TOTAL_SPACES === 40);
 
 // Space IDs are sequential
 const allIds = BOARD_SPACES.map((s) => s.id);
-assert("IDs are 0–28 in order", allIds.join(",") === [...Array(29).keys()].join(","));
+assert("IDs are 0–39 in order", allIds.join(",") === [...Array(40).keys()].join(","));
 
 // Space 0 is the start (parking)
-assert("space 0 is parking",    BOARD_SPACES[0].type === SPACE_TYPES.PARKING);
-assert("space 0 label contains 'Start'", BOARD_SPACES[0].label.includes("Start"));
+assert("space 0 is parking", BOARD_SPACES[0].type === SPACE_TYPES.PARKING);
+assert("space 0 label contains 'Payday'", BOARD_SPACES[0].label.includes("Payday"));
 
 // All spaces have required fields
 const requiredFields = ["id", "type", "label", "storeId", "effect"];
@@ -61,6 +61,10 @@ assert("all spaces have valid types",      allValidTypes);
 const storeSpaces = BOARD_SPACES.filter((s) => s.type === SPACE_TYPES.STORE);
 const allStoreIdsExist = storeSpaces.every((s) => s.storeId && s.storeId in STORES);
 assert("all store spaces reference a valid storeId", allStoreIdsExist);
+assert("board has exactly 5 store entrances", storeSpaces.length === 5);
+
+const entranceIds = storeSpaces.map((s) => s.id);
+assert("store entrances are at 5/10/18/25/30 (1-based)", entranceIds.join(",") === "4,9,17,24,29");
 
 // TAX spaces have an 'amount' effect
 const taxSpaces = BOARD_SPACES.filter((s) => s.type === SPACE_TYPES.TAX);
@@ -70,11 +74,14 @@ assert("tax spaces have amount effect", taxSpaces.every((s) => typeof s.effect?.
 // MOVE spaces have a 'spaces' effect
 const moveSpaces = BOARD_SPACES.filter((s) => s.type === SPACE_TYPES.MOVE);
 assert("at least one MOVE space",        moveSpaces.length > 0);
-assert("move spaces have spaces effect", moveSpaces.every((s) => typeof s.effect?.spaces === "number"));
+assert(
+  "move spaces have spaces or action effect",
+  moveSpaces.every((s) => typeof s.effect?.spaces === "number" || typeof s.effect?.action === "string")
+);
 
 // ── STORES ────────────────────────────────────────────────────────────────────
 console.log("STORES");
-assert("has at least 10 stores", Object.keys(STORES).length >= 10);
+assert("has exactly 5 stores", Object.keys(STORES).length === 5);
 
 // Every store has a name and items object
 const allStoresValid = Object.entries(STORES).every(
