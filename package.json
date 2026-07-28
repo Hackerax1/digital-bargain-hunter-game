@@ -1,0 +1,12 @@
+{
+  "name": "digital-bargain-hunter-game",
+  "version": "0.1.0",
+  "description": "Online version of the 1981 Milton Bradley Bargain Hunter shopping board game",
+  "type": "module",
+  "scripts": {
+    "test": "node tests/board.test.mjs && node tests/player.test.mjs && node tests/game.test.mjs",
+    "start": "npx serve . --listen 8080"
+  },
+  "keywords": ["board-game", "bargain-hunter", "milton-bradley", "shopping"],
+  "license": "MIT"
+}
