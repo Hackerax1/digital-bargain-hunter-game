@@ -1,91 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bargain Hunter — Digital Board Game</title>
-  <link rel="stylesheet" href="src/css/style.css" />
-</head>
-<body>
-
-  <!-- ╔══════════════════════════════════════════════════════╗ -->
-  <!-- ║                   SETUP SCREEN                      ║ -->
-  <!-- ╚══════════════════════════════════════════════════════╝ -->
-  <div id="setup-screen">
-    <h1>🛒 Bargain Hunter</h1>
-    <p class="subtitle">Online version of the 1981 Milton Bradley shopping game</p>
-
-    <div class="setup-card">
-      <h2>Enter player names (2–4 players)</h2>
-
-      <div class="player-entry">
-        <span class="player-token-preview">🛒</span>
-        <input class="player-name-input" type="text" placeholder="Player 1 name" maxlength="20" />
-      </div>
-      <div class="player-entry">
-        <span class="player-token-preview">🛍️</span>
-        <input class="player-name-input" type="text" placeholder="Player 2 name" maxlength="20" />
-      </div>
-      <div class="player-entry">
-        <span class="player-token-preview">💳</span>
-        <input class="player-name-input" type="text" placeholder="Player 3 (optional)" maxlength="20" />
-      </div>
-      <div class="player-entry">
-        <span class="player-token-preview">🎒</span>
-        <input class="player-name-input" type="text" placeholder="Player 4 (optional)" maxlength="20" />
-      </div>
-
-      <button id="btn-start-game">Start Game 🎮</button>
-    </div>
-  </div>
-
-  <!-- ╔══════════════════════════════════════════════════════╗ -->
-  <!-- ║                    GAME SCREEN                      ║ -->
-  <!-- ╚══════════════════════════════════════════════════════╝ -->
-  <div id="game-screen" class="hidden">
-
-    <!-- Header bar -->
-    <header id="game-header">
-      <h1>🛒 Bargain Hunter</h1>
-      <span id="game-status">Loading…</span>
-      <span id="dice-result"></span>
-      <div class="header-controls">
-        <button id="btn-roll" disabled>🎲 Roll Dice</button>
-        <button id="btn-end-turn" disabled>✅ End Turn</button>
-      </div>
-    </header>
-
-    <!-- Board + log -->
-    <main id="game-main">
-      <!-- The board spaces are injected here by ui.js -->
-      <div id="game-board" role="region" aria-label="Game board"></div>
-
-      <!-- Event log -->
-      <div id="event-log-container">
-        <h3>📋 Event Log</h3>
-        <ul id="event-log"></ul>
-      </div>
-    </main>
-
-    <!-- Sidebar: players + store -->
-    <aside id="game-sidebar">
-      <div id="players-panel" aria-label="Players"></div>
-      <div id="store-panel" aria-label="Store"></div>
-    </aside>
-
-  </div><!-- /#game-screen -->
-
-  <!-- ╔══════════════════════════════════════════════════════╗ -->
-  <!-- ║                    WIN MODAL                        ║ -->
-  <!-- ╚══════════════════════════════════════════════════════╝ -->
-  <div id="win-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Game over">
-    <div id="modal-body">
-      <!-- Filled in by ui.js -->
-      <button id="btn-play-again">🔄 Play Again</button>
-    </div>
-  </div>
-
-  <!-- Modules loaded last so the DOM is ready -->
-  <script type="module" src="src/js/ui.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bargain Hunter — Digital Edition</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
