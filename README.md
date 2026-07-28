@@ -1,32 +1,38 @@
-# React + TypeScript + Vite
+# Bargain Hunter — Digital Edition
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A browser-based reimagining of the 1981 Milton Bradley shopping game **Bargain Hunter** for 2–4 players. See [`Bargain_Hunter_Digital_Design_Doc.md`](./Bargain_Hunter_Digital_Design_Doc.md) for the full design document.
 
-Currently, two official plugins are available:
+Built with **React + TypeScript + Vite**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Project structure
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+src/
+├── types/index.ts               # Core TypeScript interfaces (Player, Store, Card, GameState…)
+├── data/
+│   ├── events-cards.ts          # 17 Events card templates
+│   ├── bargain-finder-cards.ts  # 17 Bargain Finder card templates
+│   └── stores.ts                # 5 stores × 4 price cards each
+└── components/
+    ├── BoardView.tsx             # SVG board (structural template)
+    ├── CardDrawModal.tsx         # Card draw overlay
+    ├── CashDisplay.tsx           # Bill-denomination cash breakdown
+    ├── PriceCardDisplay.tsx      # Per-store active price card table
+    └── ShoppingListPanel.tsx     # Player shopping checklist + finances
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Getting started
+
+```bash
+npm install
+npm run dev      # start dev server at http://localhost:5173
+npm run build    # production build
+npm run lint     # lint with Oxlint
+```
+
+## Roadmap
+
+- **Phase 0** — local pass-and-play prototype (rules engine, full board)
+- **Phase 1** — online synchronous multiplayer via invite codes + WebSockets
+- **Phase 2** — CPU opponents, stats, animation polish, accessibility
+- **Phase 3** — installable PWA, licensing decisions
