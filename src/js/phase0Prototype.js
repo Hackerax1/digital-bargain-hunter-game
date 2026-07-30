@@ -1,4 +1,44 @@
 import { createShoppingListFromTemplate } from "../data/shopping-list.js";
+import { BOARD_SPACES } from "./board.js";
+
+export const BOARD_STORE_SEQUENCE = ["dept_b", "furn_b", "pets", "dept_a", "furn_a"];
+const PAYDAY_SPACE_ID = "0";
+
+const BOARD_SPACE_SEQUENCE = Array.from({ length: 40 }, (_, index) => index);
+export const BOARD_ORDER = BOARD_SPACE_SEQUENCE.map((index) => String(index));
+
+function deriveSpaceType(space) {
+  if (space.storeId) {
+    return "store_entrance";
+  }
+
+  const label = space.label.toLowerCase();
+  if (label.includes("payday")) {
+    return "payday";
+  }
+  if (label.includes("tag sale")) {
+    return "tag_sale";
+  }
+  if (label.includes("sale")) {
+    return "sale";
+  }
+  if (label.includes("events card")) {
+    return "events";
+  }
+  if (label.includes("window shopping")) {
+    return "window_shopping";
+  }
+  if (label.includes("go back") || label.includes("go to")) {
+    return "move";
+  }
+  if (label.includes("restaurant") || label.includes("auto repairs") || label.includes("doctor") || label.includes("charity") || label.includes("gift shop") || label.includes("lottery")) {
+    return "penalty";
+  }
+  if (label.includes("bargain finder")) {
+    return "bargain_finder";
+  }
+  return "move";
+}
 
 export function createInitialPlayers(names) {
   const colors = ["#e63946", "#2a9d8f", "#e9c46a", "#457b9d"];
@@ -13,100 +53,38 @@ export function createInitialPlayers(names) {
     shoppingList: createInitialShoppingList(),
     bargainFinderHand: [],
     holdableEvents: [],
-    position: { spaceId: "payday", context: "outer" },
+    position: { spaceId: PAYDAY_SPACE_ID, context: "outer" },
     isActive: index === 0,
   }));
 }
-
-const BOARD_ORDER = [
-  "payday",
-  "events",
-  "penalty",
-  "sale",
-  "dept_a",
-  "dept_b",
-  "furn_a",
-  "furn_b",
-  "pets",
-  "tag_sale",
-];
 
 export function createInitialShoppingList() {
   return createShoppingListFromTemplate();
 }
 
 export function buildBoardGraph() {
-  const spaces = {
-    payday: {
-      id: "payday",
-      type: "payday",
-      label: "Payday",
-      nextIds: ["events"],
-    },
-    events: {
-      id: "events",
-      type: "events",
-      label: "Events",
-      nextIds: ["penalty"],
-    },
-    penalty: {
-      id: "penalty",
-      type: "penalty",
-      label: "Penalty",
-      nextIds: ["sale"],
-    },
-    sale: {
-      id: "sale",
-      type: "sale",
-      label: "Sale",
-      nextIds: ["dept_a"],
-    },
-    dept_a: {
-      id: "dept_a",
-      type: "store_entrance",
-      label: "Dept A",
-      storeId: "dept_a",
-      nextIds: ["dept_b"],
-    },
-    dept_b: {
-      id: "dept_b",
-      type: "store_entrance",
-      label: "Dept B",
-      storeId: "dept_b",
-      nextIds: ["furn_a"],
-    },
-    furn_a: {
-      id: "furn_a",
-      type: "store_entrance",
-      label: "Furn A",
-      storeId: "furn_a",
-      nextIds: ["furn_b"],
-    },
-    furn_b: {
-      id: "furn_b",
-      type: "store_entrance",
-      label: "Furn B",
-      storeId: "furn_b",
-      nextIds: ["pets"],
-    },
-    pets: {
-      id: "pets",
-      type: "store_entrance",
-      label: "Pets",
-      storeId: "pets",
-      nextIds: ["tag_sale"],
-    },
-    tag_sale: {
-      id: "tag_sale",
-      type: "tag_sale",
-      label: "Tag Sale",
-      nextIds: ["payday"],
-    },
-  };
+  const spaces = Object.fromEntries(
+    BOARD_SPACES.map((space, index) => {
+      const id = String(index);
+      const type = deriveSpaceType(space);
+
+      return [
+        id,
+        {
+          id,
+          type,
+          label: space.label,
+          ...(space.storeId ? { storeId: space.storeId } : {}),
+          nextIds: [BOARD_ORDER[(index + 1) % BOARD_ORDER.length]],
+        },
+      ];
+    })
+  );
 
   return {
     spaces,
-    outerStartId: "payday",
+    outerStartId: PAYDAY_SPACE_ID,
+    order: BOARD_ORDER,
   };
 }
 
@@ -116,7 +94,7 @@ export function getNextSpaceId(currentSpaceId, spin) {
 }
 
 export function getMovementPath(currentSpaceId, spin) {
-  const currentIndex = BOARD_ORDER.indexOf(currentSpaceId);
+  const currentIndex = BOARD_ORDER.indexOf(String(currentSpaceId));
   if (currentIndex === -1 || spin <= 0) {
     return [];
   }

@@ -149,6 +149,7 @@ export interface BoardSpace {
 export interface BoardGraph {
   spaces: Record<string, BoardSpace>;
   outerStartId: string;
+  order?: string[];
 }
 
 // ─── Game state ───────────────────────────────────────────────────────────────

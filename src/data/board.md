@@ -1,4 +1,4 @@
-1. Payday! 10% interest due!
+1. Payday! 10% interest due! (Corner)
 2. Go to any store space
 3. RESTAURANT PAY $10 x spinner
 4. SALE!
@@ -9,7 +9,7 @@
 9. Auto Repairs. Pay $50 x Spinner 
 10. Blue Furniture Store Entrance
 11. Window Shopping (do nothing)
-12. Events Card
+12. Events Card (Corner)
 13. Take a Bargain Finder card
 14. SALE!
 15. Go back to any space in the Blue Furniture Store or draw an events card
@@ -18,7 +18,7 @@
 18. Pet Shop Entrance
 19. Window Shopping (do nothing)
 20. SALE!
-21. Events Card
+21. Events Card (Corner)
 22. Take a Bargain Finder card
 23. Go back to any space in the Pet Shop or draw an events card
 24. Charity Give x Spinner
@@ -29,7 +29,7 @@
 29. Go to PAYDAY!
 30. Green Furniture Store Entrance
 31. Window Shopping (do nothing)
-32. Events Card
+32. Events Card (Corner)
 33. Take a Bargain Finder card
 34. SALE!
 35. Go back to any space in the Green Furniture Store or draw an events card

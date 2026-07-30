@@ -7,31 +7,22 @@ interface BoardViewProps {
   activePlayerId: string;
 }
 
-const OUTER_ORDER = [
-  "payday",
-  "events",
-  "penalty",
-  "sale",
-  "dept_a",
-  "dept_b",
-  "furn_a",
-  "furn_b",
-  "pets",
-  "tag_sale",
-];
+const SIDE_LENGTH = 10;
+const SPACE_SIZE = 74;
+const SPACE_GAP = 12;
+const BOARD_MARGIN = 90;
+const CORNER_INDICES = [0, 11, 20, 31];
 
-const SPACE_LAYOUT: Record<string, { x: number; y: number }> = {
-  payday: { x: 500, y: 90 },
-  events: { x: 690, y: 175 },
-  penalty: { x: 770, y: 350 },
-  sale: { x: 690, y: 525 },
-  dept_a: { x: 500, y: 610 },
-  dept_b: { x: 300, y: 610 },
-  furn_a: { x: 110, y: 525 },
-  furn_b: { x: 35, y: 350 },
-  pets: { x: 110, y: 175 },
-  tag_sale: { x: 300, y: 90 },
-};
+function getSegment(index: number) {
+  const segmentForIndex = CORNER_INDICES.findIndex((corner, segment) => {
+    if (segment === CORNER_INDICES.length - 1) {
+      return index >= corner || index <= CORNER_INDICES[0];
+    }
+    return index >= corner && index <= CORNER_INDICES[segment + 1];
+  });
+
+  return segmentForIndex === -1 ? 0 : segmentForIndex;
+}
 
 function splitLabel(label: string): string[] {
   const words = label.split(" ");
@@ -43,17 +34,31 @@ function splitLabel(label: string): string[] {
   return [words.slice(0, half).join(" "), words.slice(half).join(" ")];
 }
 
-/**
- * BoardView — renders the game board as an SVG.
- *
- * This is a structural template; the actual SVG geometry (coordinates of each
- * space, store branch positions, etc.) should be populated once the full board
- * layout is finalized. Each <BoardSpace> node is rendered as a rectangle/circle
- * with a text label and any pawn tokens currently on that space.
- *
- * Design doc §6: outer ring traversed clockwise; store branches
- * counter-clockwise; movement animated tile-by-tile.
- */
+function getLayout(index: number) {
+  const edge = (SIDE_LENGTH - 1) * (SPACE_SIZE + SPACE_GAP);
+  const corners = [
+    { x: BOARD_MARGIN + edge, y: BOARD_MARGIN + edge },
+    { x: BOARD_MARGIN, y: BOARD_MARGIN + edge },
+    { x: BOARD_MARGIN, y: BOARD_MARGIN },
+    { x: BOARD_MARGIN + edge, y: BOARD_MARGIN },
+    { x: BOARD_MARGIN + edge, y: BOARD_MARGIN + edge },
+  ];
+
+  const segment = getSegment(index);
+  const startIndex = CORNER_INDICES[segment];
+  const endIndex = segment === CORNER_INDICES.length - 1 ? CORNER_INDICES[0] + 40 : CORNER_INDICES[segment + 1];
+  const adjustedIndex = segment === CORNER_INDICES.length - 1 && index < CORNER_INDICES[0] ? index + 40 : index;
+  const span = endIndex - startIndex;
+  const t = span === 0 ? 0 : (adjustedIndex - startIndex) / span;
+  const start = corners[segment];
+  const end = corners[segment + 1];
+
+  return {
+    x: start.x + (end.x - start.x) * t,
+    y: start.y + (end.y - start.y) * t,
+  };
+}
+
 const BoardView: React.FC<BoardViewProps> = ({ board, players, activePlayerId }) => {
   const playersBySpace: Record<string, Player[]> = {};
   for (const player of players) {
@@ -64,11 +69,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board, players, activePlayerId })
 
   const activePlayer = players.find((player) => player.id === activePlayerId);
   const activeSpaceId = activePlayer?.position.spaceId;
-
-  const pathPoints = OUTER_ORDER.map((spaceId) => {
-    const point = SPACE_LAYOUT[spaceId];
-    return `${point.x + 65},${point.y + 44}`;
-  }).join(" ");
+  const boardOrder = board.order ?? Object.keys(board.spaces);
 
   return (
     <svg className="board-view" viewBox="0 0 900 720" role="img" aria-label="Game board">
@@ -81,44 +82,47 @@ const BoardView: React.FC<BoardViewProps> = ({ board, players, activePlayerId })
 
       <rect x="12" y="12" width="876" height="696" rx="24" className="board-frame" />
       <rect x="40" y="40" width="820" height="640" rx="20" fill="url(#board-bg)" />
-      <polygon className="board-track" points={pathPoints} />
+      <rect x="70" y="70" width="760" height="580" rx="24" className="board-track" />
 
       <text x="450" y="332" textAnchor="middle" className="board-center-title">
         Bargain Hunter
       </text>
       <text x="450" y="362" textAnchor="middle" className="board-center-subtitle">
-        Phase 0 Local Prototype
+        Square board • 1–8 spinner
       </text>
 
-      {OUTER_ORDER.map((spaceId) => {
+      {boardOrder.map((spaceId, index) => {
         const space = board.spaces[spaceId];
         if (!space) {
           return null;
         }
 
-        const layout = SPACE_LAYOUT[spaceId];
-        const x = layout.x;
-        const y = layout.y;
+        const layout = getLayout(index);
+        const segment = getSegment(index);
+        const isCorner = CORNER_INDICES.includes(index);
+        const width = isCorner ? SPACE_SIZE + 10 : SPACE_SIZE;
+        const height = isCorner ? SPACE_SIZE : SPACE_SIZE - 12;
+        const rotation = isCorner ? 0 : [0, -90, 180, 90][segment] ?? 0;
         const pawns = playersBySpace[space.id] ?? [];
         const isActiveSpace = activeSpaceId === space.id;
         const labelLines = splitLabel(space.label);
 
         return (
-          <g key={space.id} transform={`translate(${x},${y})`}>
+          <g key={space.id} transform={`translate(${layout.x},${layout.y}) rotate(${rotation} ${width / 2} ${height / 2})`}>
             <rect
-              width={130}
-              height={88}
-              rx={16}
+              width={width}
+              height={height}
+              rx={14}
               className={`board-space board-space--${space.type}${isActiveSpace ? " board-space--active" : ""}`}
             />
-            {labelLines.map((line, index) => (
-              <text key={`${space.id}-${index}`} x={65} y={31 + index * 16} textAnchor="middle" className="board-space__label">
+            {labelLines.map((line, lineIndex) => (
+              <text key={`${space.id}-${lineIndex}`} x={width / 2} y={28 + lineIndex * 14} textAnchor="middle" className="board-space__label">
                 {line}
               </text>
             ))}
 
             {pawns.map((p, pi) => (
-              <g key={p.id} transform={`translate(${18 + pi * 28},64)`}>
+              <g key={p.id} transform={`translate(${18 + pi * 22},${height - 22})`}>
                 <circle
                   cx={0}
                   cy={0}

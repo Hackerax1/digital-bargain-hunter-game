@@ -57,7 +57,7 @@ function App() {
   const [tagSalePrice, setTagSalePrice] = useState<number | null>(null);
   const [drawnCard, setDrawnCard] = useState<Card | null>(null);
   const [skipTurns, setSkipTurns] = useState<Record<string, number>>({});
-  const [message, setMessage] = useState("Roll the die to begin the first turn.");
+  const [message, setMessage] = useState("Spin the 1–8 spinner to begin the first turn.");
 
   const activePlayer = players[turnIndex];
   const currentSpace = board.spaces[activePlayer.position.spaceId];
@@ -92,7 +92,7 @@ function App() {
       position: { ...nextPlayers[turnIndex].position, spaceId: nextSpaceId },
     };
 
-    const passedOrLandedPayday = movementPath.includes("payday");
+    const passedOrLandedPayday = movementPath.includes("0");
     if (passedOrLandedPayday) {
       updatedPlayer.cash += 300;
     }
@@ -103,7 +103,7 @@ function App() {
 
     nextPlayers[turnIndex] = updatedPlayer;
 
-    let nextMessage = `${activePlayer.name} rolled ${nextRoll} and moved to ${nextSpace.label}.`;
+    let nextMessage = `${activePlayer.name} spun ${nextRoll} and moved to ${nextSpace.label}.`;
     let nextSaleActive = false;
     let nextTagSalePrice: number | null = null;
     let nextDrawnCard: Card | null = null;
@@ -357,7 +357,7 @@ function App() {
     setTagSalePrice(null);
     setDrawnCard(null);
     setSkipTurns({});
-    setMessage("A new game is ready. Roll the die to begin.");
+    setMessage("A new game is ready. Spin the 1–8 spinner to begin.");
   };
 
   const handleRotateStore = (storeId: string) => {
@@ -398,7 +398,7 @@ function App() {
           <BoardView board={board} players={players} activePlayerId={activePlayer.id} />
           <div className="controls">
             <button className="btn btn--primary" onClick={handleRoll} disabled={phase !== "playing" || roll !== null}>
-              Roll die
+              Spin spinner
             </button>
             <button className="btn btn--secondary" onClick={handleEndTurn} disabled={phase !== "playing"}>
               End turn
@@ -407,8 +407,12 @@ function App() {
               New game
             </button>
           </div>
+          <div className="spinner-widget" aria-label="Spinner display">
+            <span className="spinner-widget__label">Spinner</span>
+            <strong>{roll ?? "—"}</strong>
+          </div>
           <p className="message">{message}</p>
-          {roll !== null && <p className="roll">Last roll: {roll}</p>}
+          {roll !== null && <p className="roll">Last spin: {roll}</p>}
         </section>
 
         <aside className="sidebar">
