@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node tests/board.test.mjs && node tests/player.test.mjs && node tests/game.test.mjs",
+    "test": "node tests/board.test.mjs && node tests/player.test.mjs && node tests/game.test.mjs && node tests/phase0.test.mjs",
     "start": "npx serve . --listen 8080"
   },
   "keywords": ["board-game", "bargain-hunter", "milton-bradley", "shopping"],

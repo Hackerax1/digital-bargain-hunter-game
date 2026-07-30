@@ -40,8 +40,10 @@ const ShoppingListPanel: React.FC<ShoppingListPanelProps> = ({
             </span>
             <span className="shopping-list-panel__item-name">
               {item.isPetSlot
-                ? `Pet: ${item.petSpecies ?? "?"}`
-                : item.itemId.replace(/_/g, " ")}
+                ? item.purchased
+                  ? item.name
+                  : `${item.name} (open)`
+                : item.name}
             </span>
             {item.purchased && item.pricePaid !== undefined && (
               <span className="shopping-list-panel__item-price">
