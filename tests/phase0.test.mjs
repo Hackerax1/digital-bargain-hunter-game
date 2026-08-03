@@ -31,16 +31,21 @@ assert("includes the payday space", Boolean(board.spaces["0"]));
 assert("uses a 40-space board order", BOARD_ORDER.length === 40);
 assert("uses the board-image store sequence", BOARD_STORE_SEQUENCE.join(",") === "dept_b,furn_b,pets,dept_a,furn_a");
 
+// Test store branches exist
+assert("includes store internal spaces", Object.keys(board.spaces).length > 40);
+assert("dept_a has internal spaces", board.spaces["dept_a_0"] !== undefined);
+assert("pets has YOUR_CHOICE space", Object.values(board.spaces).some(s => s.type === "your_choice"));
+
 const list = createInitialShoppingList();
 assert("creates a full 19-item shopping list", list.length === 19);
 assert("creates exactly two pet slots", list.filter((item) => item.isPetSlot).length === 2);
 
-const movementPath = getMovementPath("0", 3);
+const movementPath = getMovementPath("0", 3, board);
 assert(
   "movement path includes intermediate spaces and wraps board order",
   movementPath.length === 3 && movementPath[0] === "1" && movementPath[1] === "2" && movementPath[2] === "3"
 );
-assert("getNextSpaceId returns the final step in movement path", getNextSpaceId("0", 3) === "3");
+assert("getNextSpaceId returns the final step in movement path", getNextSpaceId("0", 3, board) === "3");
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

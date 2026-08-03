@@ -39,6 +39,20 @@ export const stores: Store[] = [
     id: "dept_a",
     name: "Department Store Olive",
     colorGroup: "deptA",
+    itemOrder: [
+      "stove",
+      "radio",
+      "television",
+      "SALE",
+      "dishwasher",
+      "clothes_dryer",
+      "refrigerator",
+      "washing_machine",
+      "SALE",
+      "iron",
+      "blender",
+      "toaster",
+    ],
     priceDeck: [
       {
         id: "dept_a_price_1",
@@ -111,6 +125,20 @@ export const stores: Store[] = [
     id: "dept_b",
     name: "Department Store Purple",
     colorGroup: "deptB",
+    itemOrder: [
+      "radio",
+      "clothes_dryer",
+      "toaster",
+      "SALE",
+      "iron",
+      "blender",
+      "refrigerator",
+      "television",
+      "SALE",
+      "stove",
+      "dishwasher",
+      "washing_machine",
+    ],
     priceDeck: [
       {
         id: "dept_b_price_1",
@@ -183,6 +211,15 @@ export const stores: Store[] = [
     id: "furn_a",
     name: "Furniture Store Green",
     colorGroup: "furnA",
+    itemOrder: [
+      "kitchen_set",
+      "sofa",
+      "lamp",
+      "armchair",
+      "clock",
+      "bed",
+      "dresser",
+    ],
     priceDeck: [
       {
         id: "furn_a_price_1",
@@ -243,6 +280,15 @@ export const stores: Store[] = [
     id: "furn_b",
     name: "Furniture Store Blue",
     colorGroup: "furnB",
+    itemOrder: [
+      "lamp",
+      "sofa",
+      "dresser",
+      "bed",
+      "clock",
+      "armchair",
+      "kitchen_set",
+    ],
     priceDeck: [
       {
         id: "furn_b_price_1",
@@ -303,6 +349,15 @@ export const stores: Store[] = [
     id: "pets",
     name: "Pet Store Yellow",
     colorGroup: "pets",
+    itemOrder: [
+      "rabbit",
+      "fish",
+      "YOUR_CHOICE",
+      "parrot",
+      "cat",
+      "lizard",
+      "dog",
+    ],
     priceDeck: [
       {
         id: "pets_price_1",

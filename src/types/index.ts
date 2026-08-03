@@ -98,6 +98,8 @@ export interface Store {
   colorGroup: StoreColorGroup;
   /** Length-4 array; index 0 is the active (top) card */
   priceDeck: PriceCard[];
+  /** This store's internal item-space sequence (includes "SALE" pseudo-items for dept stores, "YOUR_CHOICE" for pets) */
+  itemOrder: string[];
 }
 
 // ─── Player ───────────────────────────────────────────────────────────────────
@@ -131,17 +133,33 @@ export type SpaceType =
   | "store_entrance"
   | "store_exit"
   | "item"
-  | "bargain_item";
+  | "bargain_item"
+  | "your_choice"
+  | "move";
 
 export interface BoardSpace {
   id: string;
   type: SpaceType;
   /** Label shown on the space */
   label: string;
-  /** For item/bargain_item spaces: which item is for sale here */
+  /** "outer" for outer ring, storeId for store internal spaces */
+  context: SpaceContext;
+  /** For item/bargain_item/your_choice spaces: which item is for sale here */
   itemId?: string;
-  /** For store_entrance spaces: which store this leads into */
+  /** For store_entrance/store_exit/item spaces: which store this belongs to */
   storeId?: StoreId;
+  /** For store_entrance: first internal space id */
+  storeEntryId?: string;
+  /** For store_exit: which outer ring space to return to */
+  outerExitId?: string;
+  /** Special space effects (penalty, move, etc.) */
+  effect?: {
+    action?: string;
+    amount?: number;
+    perSpin?: boolean;
+    targetId?: number;
+    storeId?: StoreId;
+  } | null;
   /** Adjacency list (clockwise on outer ring; counter-clockwise inside stores) */
   nextIds: string[];
 }
